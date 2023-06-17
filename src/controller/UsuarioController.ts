@@ -48,69 +48,16 @@ class UsuarioController {
 
   static add = async (req: Request, resp: Response) => {
     try {
-      const {
-        id,
-        nombre,
-        apellido1,
-        apellido2,
-        correo,
-        contrasena,
-        rol,
-        estado,
-      } = req.body;
-      if (!id) {
-        return resp.status(404).json({ mensaje: "Debe indicar el ID" });
-      }
-      if (!nombre) {
-        return resp
-          .status(404)
-          .json({ mensaje: "Debe indicar el nombre del usuario" });
-      }
-      if (!apellido1) {
-        return resp
-          .status(404)
-          .json({ mensaje: "Debe indicar el apellido del usuario" });
-      }
-      if (!apellido2) {
-        return resp
-          .status(404)
-          .json({ mensaje: "Debe indicar el apellido del usuario" });
-      }
-      if (!correo) {
-        return resp
-          .status(404)
-          .json({ mensaje: "Debe indicar el correo del usuario" });
-      }
-      if (!contrasena) {
-        return resp
-          .status(404)
-          .json({ mensaje: "Debe indicar la contrasena del usuario" });
-      }
-      if (!rol) {
-        return resp
-          .status(404)
-          .json({ mensaje: "Debe indicar el rol del usuario" });
-      }
-      if (!estado) {
-        return resp
-          .status(404)
-          .json({ mensaje: "Debe indicar el estado del usuario" });
-      }
+      const { id, nombre, apellido1, apellido2, correo, contrasena, rol } =
+        req.body;
 
-      //Validaciones de reglas de negocio
-      const UsuarioRepo = AppDataSource.getRepository(Usuario);
-      const usu = await UsuarioRepo.findOne({ where: { id } });
-      if (usu) {
-        return resp
-          .status(404)
-          .json({ mensaje: "El usuario ya existe en la base de datos." });
-      }
-
+      let fecha: Date;
       let usuario = new Usuario();
       usuario.id = id;
       usuario.nombre = nombre;
       usuario.apellido1 = apellido1;
       usuario.apellido2 = apellido2;
+      usuario.fecha_ingreso = fecha;
       usuario.correo = correo;
       usuario.contrasena = contrasena;
       usuario.rol = rol;
@@ -123,6 +70,22 @@ class UsuarioController {
 
       if (errors.length > 0) {
         return resp.status(400).json(errors);
+      }
+
+      //Validaciones de reglas de negocio
+      const UsuarioRepo = AppDataSource.getRepository(Usuario);
+      let usuarioExist = await UsuarioRepo.findOne({ where: { id } });
+      if (usuarioExist) {
+        return resp
+          .status(400)
+          .json({ mensaje: "El usuario ya existe en la base de datos." });
+      }
+
+      usuarioExist = await UsuarioRepo.findOne({ where: { correo: correo } });
+      if (usuario) {
+        resp
+          .status(400)
+          .json({ mensaje: "Ya existe un usuario registrado con el correo" });
       }
 
       await UsuarioRepo.save(usuario);
