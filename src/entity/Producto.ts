@@ -6,7 +6,6 @@ export class Producto {
   @PrimaryColumn()
   id: number;
   @Column({ length: 50 })
-  @MaxLength(5, { message: "Debe ser menos de 5 caracteres" })
   @IsNotEmpty()
   nombre: string;
   @Column()

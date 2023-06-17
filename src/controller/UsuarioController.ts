@@ -51,16 +51,16 @@ class UsuarioController {
       const { id, nombre, apellido1, apellido2, correo, contrasena, rol } =
         req.body;
 
-      let fecha: Date;
+      let fecha = new Date();
       let usuario = new Usuario();
       usuario.id = id;
       usuario.nombre = nombre;
       usuario.apellido1 = apellido1;
       usuario.apellido2 = apellido2;
-      usuario.fecha_ingreso = fecha;
       usuario.correo = correo;
       usuario.contrasena = contrasena;
       usuario.rol = rol;
+      usuario.fecha_ingreso = fecha;
       usuario.estado = true;
 
       //Validar con classvalidator
@@ -82,14 +82,20 @@ class UsuarioController {
       }
 
       usuarioExist = await UsuarioRepo.findOne({ where: { correo: correo } });
-      if (usuario) {
+      if (usuarioExist) {
         resp
           .status(400)
           .json({ mensaje: "Ya existe un usuario registrado con el correo" });
       }
 
-      await UsuarioRepo.save(usuario);
-      return resp.status(201).json({ mensaje: "Usuario creado" });
+      usuario.hashPassword();
+
+      try {
+        await UsuarioRepo.save(usuario);
+        return resp.status(201).json({ mensaje: "Se ha creado el usuario" });
+      } catch (error) {
+        resp.status(400).json(error);
+      }
     } catch (error) {
       return resp.status(400).json({ mensaje: error });
     }
@@ -97,56 +103,8 @@ class UsuarioController {
 
   static update = async (req: Request, resp: Response) => {
     //destructuring
-    const {
-      id,
-      nombre,
-      apellido1,
-      apellido2,
-      correo,
-      contrasena,
-      rol,
-      estado,
-    } = req.body;
-
-    //Validacion de datos de entrada
-    if (!id) {
-      return resp.status(404).json({ mensaje: "Debe indicar el ID" });
-    }
-    if (!nombre) {
-      return resp
-        .status(404)
-        .json({ mensaje: "Debe indicar el nombre del usuario" });
-    }
-    if (!apellido1) {
-      return resp
-        .status(404)
-        .json({ mensaje: "Debe indicar el apellido del usuario" });
-    }
-    if (!apellido2) {
-      return resp
-        .status(404)
-        .json({ mensaje: "Debe indicar el apellido del usuario" });
-    }
-    if (!correo) {
-      return resp
-        .status(404)
-        .json({ mensaje: "Debe indicar el correo del usuario" });
-    }
-    if (!contrasena) {
-      return resp
-        .status(404)
-        .json({ mensaje: "Debe indicar la contrasena del usuario" });
-    }
-    if (!rol) {
-      return resp
-        .status(404)
-        .json({ mensaje: "Debe indicar el rol del usuario" });
-    }
-    if (!estado) {
-      return resp
-        .status(404)
-        .json({ mensaje: "Debe indicar el estado del usuario" });
-    }
+    const { id, nombre, apellido1, apellido2, correo, contrasena, rol } =
+      req.body;
 
     //Validaciones de reglas de negocio
     const UsuarioRepo = AppDataSource.getRepository(Usuario);
